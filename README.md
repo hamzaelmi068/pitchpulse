@@ -10,7 +10,7 @@ coverage — all in one immersive interface. Built by football fans, for footbal
 
 ## Inspiration
 
-Inspired by the layout and feel of [WorldMonitor](https://www.worldmonitor.app) 
+/*Inspired by the layout and feel of [WorldMonitor](https://www.worldmonitor.app) */
 — we wanted the same "mission control" experience, but for the World Cup.
 
 ---
