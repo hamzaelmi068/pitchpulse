@@ -6,14 +6,6 @@ PitchPulse is a real-time, map-inspired dashboard that brings together live
 scores, player stats, bracket tracking, AI match insights, and global news 
 coverage — all in one immersive interface. Built by football fans, for football fans.
 
----
-
-## Inspiration
-
-/*Inspired by the layout and feel of [WorldMonitor](https://www.worldmonitor.app) */
-— we wanted the same "mission control" experience, but for the World Cup.
-
----
 
 ## 🚀 Features (Planned)
 
