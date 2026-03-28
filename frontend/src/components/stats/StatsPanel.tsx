@@ -16,7 +16,7 @@ export function StatsPanel() {
   }));
 
   return (
-    <div className="absolute bottom-8 left-6 z-10 w-56 rounded-xl border border-white/10 bg-neutral-900/80 backdrop-blur-md shadow-2xl overflow-hidden">
+    <div className="absolute bottom-4 left-4 z-10 w-56 rounded-xl border border-white/10 bg-neutral-900/80 backdrop-blur-md shadow-2xl overflow-hidden md:bottom-6 md:left-6">
       {/* Title */}
       <div className="px-4 pt-3 pb-2 border-b border-white/5">
         <p className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">

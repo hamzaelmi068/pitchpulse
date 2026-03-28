@@ -33,7 +33,7 @@ export function MapLoadingSkeleton() {
         <Skeleton className="absolute top-[62%] left-[34%] h-3 w-3 rounded-full bg-green-500/40" />
 
         {/* Stats panel skeleton — bottom left */}
-        <div className="absolute bottom-8 left-6 w-56 space-y-3 p-4 rounded-xl border border-neutral-800 bg-neutral-900/80">
+        <div className="absolute bottom-4 left-4 w-56 space-y-3 rounded-xl border border-neutral-800 bg-neutral-900/80 p-4 md:bottom-6 md:left-6">
           <Skeleton className="h-4 w-24 bg-neutral-700" />
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -57,7 +57,7 @@ export function MapLoadingSkeleton() {
         </div>
 
         {/* Zoom controls skeleton — bottom right */}
-        <div className="absolute bottom-8 right-6 space-y-1">
+        <div className="absolute bottom-4 right-4 space-y-1 md:bottom-6 md:right-6">
           <Skeleton className="h-8 w-8 rounded-md bg-neutral-800" />
           <Skeleton className="h-8 w-8 rounded-md bg-neutral-800" />
         </div>

@@ -1,4 +1,10 @@
-export function Header() {
+import { PanelBottom } from "lucide-react";
+
+interface HeaderProps {
+  onOpenWorkspace?: () => void;
+}
+
+export function Header({ onOpenWorkspace }: HeaderProps) {
   return (
     <header className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
       <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-b from-neutral-950/90 to-transparent">
@@ -40,6 +46,14 @@ export function Header() {
           <span className="text-xs text-neutral-400 hidden sm:block">
             Canada · Mexico · USA
           </span>
+          <button
+            type="button"
+            onClick={onOpenWorkspace}
+            className="flex h-9 items-center gap-2 rounded-full border border-white/10 bg-neutral-900/80 px-3 text-xs font-medium text-neutral-200 shadow-lg shadow-black/20 transition hover:bg-neutral-800 md:hidden"
+          >
+            <PanelBottom className="size-3.5" />
+            Feed
+          </button>
         </div>
       </div>
     </header>
