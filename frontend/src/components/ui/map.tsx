@@ -27,61 +27,6 @@ const defaultStyles = {
 
 type Theme = "light" | "dark";
 
-// Check document class for theme (works with next-themes, etc.)
-function getDocumentTheme(): Theme | null {
-  if (typeof document === "undefined") return null;
-  if (document.documentElement.classList.contains("dark")) return "dark";
-  if (document.documentElement.classList.contains("light")) return "light";
-  return null;
-}
-
-// Get system preference
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-function useResolvedTheme(themeProp?: "light" | "dark"): Theme {
-  const [detectedTheme, setDetectedTheme] = useState<Theme>(
-    () => getDocumentTheme() ?? getSystemTheme(),
-  );
-
-  useEffect(() => {
-    if (themeProp) return; // Skip detection if theme is provided via prop
-
-    // Watch for document class changes (e.g., next-themes toggling dark class)
-    const observer = new MutationObserver(() => {
-      const docTheme = getDocumentTheme();
-      if (docTheme) {
-        setDetectedTheme(docTheme);
-      }
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    // Also watch for system preference changes
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleSystemChange = (e: MediaQueryListEvent) => {
-      // Only use system preference if no document class is set
-      if (!getDocumentTheme()) {
-        setDetectedTheme(e.matches ? "dark" : "light");
-      }
-    };
-    mediaQuery.addEventListener("change", handleSystemChange);
-
-    return () => {
-      observer.disconnect();
-      mediaQuery.removeEventListener("change", handleSystemChange);
-    };
-  }, [themeProp]);
-
-  return themeProp ?? detectedTheme;
-}
-
 type MapContextValue = {
   map: MapLibreGL.Map | null;
   isLoaded: boolean;
@@ -118,8 +63,7 @@ type MapProps = {
   /** Additional CSS classes for the map container */
   className?: string;
   /**
-   * Theme for the map. If not provided, automatically detects system preference.
-   * Pass your theme value here.
+   * Theme for the map. Defaults to dark.
    */
   theme?: Theme;
   /** Custom map styles for light and dark themes. Overrides the default Carto styles. */
@@ -186,13 +130,14 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
   const currentStyleRef = useRef<MapStyleOption | null>(null);
   const styleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resizeFrameRef = useRef<number | null>(null);
   const internalUpdateRef = useRef(false);
-  const resolvedTheme = useResolvedTheme(themeProp);
+  const resolvedTheme = themeProp ?? "dark";
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const isControlled = viewport !== undefined && onViewportChange !== undefined;
 
   const onViewportChangeRef = useRef(onViewportChange);
-  onViewportChangeRef.current = onViewportChange;
 
   const mapStyles = useMemo(
     () => ({
@@ -201,6 +146,18 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     }),
     [styles],
   );
+  const resolvedThemeRef = useRef(resolvedTheme);
+  const mapStylesRef = useRef(mapStyles);
+  const projectionRef = useRef(projection);
+  const propsRef = useRef(props);
+  const viewportRef = useRef(viewport);
+
+  onViewportChangeRef.current = onViewportChange;
+  resolvedThemeRef.current = resolvedTheme;
+  mapStylesRef.current = mapStyles;
+  projectionRef.current = projection;
+  propsRef.current = props;
+  viewportRef.current = viewport;
 
   // Expose the map instance to the parent component
   useImperativeHandle(ref, () => mapInstance as MapLibreGL.Map, [mapInstance]);
@@ -212,12 +169,22 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     }
   }, []);
 
+  const cancelResizeFrame = useCallback(() => {
+    if (resizeFrameRef.current !== null) {
+      cancelAnimationFrame(resizeFrameRef.current);
+      resizeFrameRef.current = null;
+    }
+  }, []);
+
   // Initialize the map
   useEffect(() => {
     if (!containerRef.current) return;
+    let disposed = false;
 
     const initialStyle =
-      resolvedTheme === "dark" ? mapStyles.dark : mapStyles.light;
+      resolvedThemeRef.current === "dark"
+        ? mapStylesRef.current.dark
+        : mapStylesRef.current.light;
     currentStyleRef.current = initialStyle;
 
     const map = new MapLibreGL.Map({
@@ -227,8 +194,9 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       attributionControl: {
         compact: true,
       },
-      ...props,
-      ...viewport,
+      projection: projectionRef.current,
+      ...propsRef.current,
+      ...viewportRef.current,
     });
 
     const styleDataHandler = () => {
@@ -237,10 +205,8 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       // This is a workaround to avoid race conditions with the style loading
       // else we have to force update every layer on setStyle change
       styleTimeoutRef.current = setTimeout(() => {
+        if (disposed) return;
         setIsStyleLoaded(true);
-        if (projection) {
-          map.setProjection(projection);
-        }
       }, 100);
     };
     const loadHandler = () => setIsLoaded(true);
@@ -254,10 +220,36 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     map.on("load", loadHandler);
     map.on("styledata", styleDataHandler);
     map.on("move", handleMove);
+
+    if (typeof ResizeObserver !== "undefined" && containerRef.current) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        if (disposed || !containerRef.current?.isConnected) {
+          return;
+        }
+        cancelResizeFrame();
+        resizeFrameRef.current = requestAnimationFrame(() => {
+          resizeFrameRef.current = null;
+          if (disposed || !containerRef.current?.isConnected) {
+            return;
+          }
+          try {
+            map.resize();
+          } catch (error) {
+            console.error("[Map] resize failed", error);
+          }
+        });
+      });
+      resizeObserverRef.current.observe(containerRef.current);
+    }
+
     setMapInstance(map);
 
     return () => {
+      disposed = true;
       clearStyleTimeout();
+      cancelResizeFrame();
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
       map.off("load", loadHandler);
       map.off("styledata", styleDataHandler);
       map.off("move", handleMove);
@@ -266,8 +258,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       setIsStyleLoaded(false);
       setMapInstance(null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cancelResizeFrame, clearStyleTimeout]);
 
   // Sync controlled viewport to map
   useEffect(() => {
