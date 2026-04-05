@@ -2,6 +2,8 @@
 
 import { PanelBottom } from "lucide-react";
 
+import Link from "next/link";
+
 interface HeaderProps {
   onOpenWorkspace?: () => void;
 }
@@ -42,6 +44,36 @@ export function Header({ onOpenWorkspace }: HeaderProps) {
             </span>
           </div>
         </div>
+
+
+
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-1 pointer-events-auto bg-white/10 rounded-full px-2 py-1 backdrop-blur-sm">
+
+          {[
+
+            { label: "Home", href: "/home" },
+            { label: "Venues", href: "/venues" },
+            { label: "Fixtures", href: "/fixtures" },
+            { label: "Groups", href: "/groups" },
+            { label: "News", href: "/news" },
+
+          ].map((item) => (
+
+            <Link
+              key={item.label}
+              href={item.href}
+              className="px-3 py-1.5 text-sm rounded-full transition text-neutral-400 hover:text-white"
+            >
+
+              {item.label}
+
+            </Link>
+            
+          ))}
+
+        </nav>
+
 
         {/* Right side — reserved for future nav */}
         <div className="flex items-center gap-4 pointer-events-auto">

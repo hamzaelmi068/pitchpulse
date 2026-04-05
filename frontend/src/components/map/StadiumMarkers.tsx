@@ -103,6 +103,17 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
                   className="h-1 w-full"
                   style={{ backgroundColor: COUNTRY_COLORS[venue.country] }}
                 />
+
+                {venue.image && (
+
+                  <img
+                  src={venue.image}
+                  alt={venue.name}
+                  className="w-full h-28 object-cover"
+                  />
+
+                )}
+
                 <div className="p-3 bg-neutral-900 space-y-2">
                   {/* Venue info */}
                   <div>
@@ -111,13 +122,16 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
                     </p>
                     <p className="text-xs text-neutral-400 mt-0.5">{venue.city}</p>
                   </div>
+
                   <div className="border-t border-neutral-800 pt-2 space-y-1">
+
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-neutral-500">Capacity</span>
                       <span className="text-xs font-mono text-neutral-200">
                         {venue.capacity.toLocaleString()}
                       </span>
                     </div>
+
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-neutral-500">Country</span>
                       <span
@@ -127,6 +141,7 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
                         {venue.country}
                       </span>
                     </div>
+                    
                   </div>
 
                   {/* Match data if available */}

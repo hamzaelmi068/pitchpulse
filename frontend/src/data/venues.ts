@@ -10,6 +10,7 @@ export const VENUES: VenueData[] = [
     capacity: 82500,
     longitude: -74.074,
     latitude: 40.814,
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/54/Copa_America_game_between_Columbia_vs_Peru_at_the_MetLife_Stadium.jpg",
   },
   {
     id: "sofi",
@@ -19,6 +20,7 @@ export const VENUES: VenueData[] = [
     capacity: 70240,
     longitude: -118.338,
     latitude: 33.954,
+    image: "https://upload.wikimedia.org/wikipedia/commons/d/d9/SoFi_Stadium_23rd_March_2025.jpg",
   },
   {
     id: "att",
@@ -28,6 +30,7 @@ export const VENUES: VenueData[] = [
     capacity: 80000,
     longitude: -97.093,
     latitude: 32.748,
+    image: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Cowboys_stadium_inside_view_4.JPG",
   },
   {
     id: "levis",
@@ -37,6 +40,7 @@ export const VENUES: VenueData[] = [
     capacity: 68500,
     longitude: -121.97,
     latitude: 37.403,
+    image: "https://upload.wikimedia.org/wikipedia/commons/0/00/Entering_Levi%27s_Stadium.JPG",
   },
   {
     id: "hardrock",
@@ -46,6 +50,7 @@ export const VENUES: VenueData[] = [
     capacity: 65326,
     longitude: -80.239,
     latitude: 25.958,
+    image: "https://upload.wikimedia.org/wikipedia/commons/0/01/Hard_Rock_Stadium_Club_World_Cup.jpg",
   },
   {
     id: "mercedesbenz",
@@ -55,6 +60,7 @@ export const VENUES: VenueData[] = [
     capacity: 71000,
     longitude: -84.401,
     latitude: 33.755,
+    image: "https://images.mlssoccer.com/image/private/t_editorial_landscape_12_desktop/f_auto/mls-atl-prd/yzbwhumpv3mva7lzeggg.jpg",
   },
   {
     id: "lumen",
@@ -64,6 +70,7 @@ export const VENUES: VenueData[] = [
     capacity: 68740,
     longitude: -122.332,
     latitude: 47.595,
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/1f/2025_FIFA_Club_World_Cup_-_Seattle_Sounders_FC_vs._Botafogo_-_03.jpg",
   },
   {
     id: "nrg",
@@ -73,6 +80,7 @@ export const VENUES: VenueData[] = [
     capacity: 72220,
     longitude: -95.41,
     latitude: 29.685,
+    image: "https://upload.wikimedia.org/wikipedia/commons/b/b9/NRG_Stadium%2C_LEAGUES_CUP_2024_TIGRES_INTER_MIAMI.jnp.jpg",
   },
   {
     id: "arrowhead",
@@ -82,6 +90,7 @@ export const VENUES: VenueData[] = [
     capacity: 76416,
     longitude: -94.484,
     latitude: 39.049,
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/10/25_July_2010_Kansas_City_Wizards_vs_Manchester_United_friendly.jpg",
   },
   {
     id: "lincoln",
@@ -91,6 +100,7 @@ export const VENUES: VenueData[] = [
     capacity: 69796,
     longitude: -75.168,
     latitude: 39.901,
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6a/United_States_v_Paraguay%2C_Copa_Am%C3%A9rica_Centenario_%28cropped%29.jpg",
   },
   {
     id: "gillette",
@@ -100,6 +110,7 @@ export const VENUES: VenueData[] = [
     capacity: 65878,
     longitude: -71.264,
     latitude: 42.091,
+    image: "https://upload.wikimedia.org/wikipedia/commons/e/e7/New_England_Revolution_vs_Liga_Deportivo_Alajuense_2024-03-06_53571677017.jpg",
   },
   // Canada (2 venues)
   {
@@ -110,6 +121,7 @@ export const VENUES: VenueData[] = [
     capacity: 45736,
     longitude: -79.419,
     latitude: 43.633,
+    image: "https://bloximages.chicago2.vip.townnews.com/thestar.com/content/tncms/assets/v3/editorial/e/4f/e4f14ad3-4f83-541b-922e-f77465631c5f/66031031493da.image.jpg?resize=889%2C500",
   },
   {
     id: "bcplace",
@@ -119,6 +131,7 @@ export const VENUES: VenueData[] = [
     capacity: 54500,
     longitude: -123.111,
     latitude: 49.277,
+    image: "https://upload.wikimedia.org/wikipedia/commons/f/ff/BC_Place_2015_Women%27s_FIFA_World_Cup.jpg",
   },
   // Mexico (3 venues)
   {
@@ -129,6 +142,7 @@ export const VENUES: VenueData[] = [
     capacity: 87523,
     longitude: -99.151,
     latitude: 19.303,
+    image: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Soccer_game_at_the_Azteca_Stadium.JPG",
   },
   {
     id: "akron",
@@ -138,6 +152,7 @@ export const VENUES: VenueData[] = [
     capacity: 49850,
     longitude: -103.619,
     latitude: 20.67,
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/10/Estadio_Akron_02-07-2022_cabecera_sur_lado_derecho_%283%29.jpg",
   },
   {
     id: "bbva",
@@ -147,6 +162,7 @@ export const VENUES: VenueData[] = [
     capacity: 53500,
     longitude: -100.309,
     latitude: 25.669,
+    image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Estadio_BBVA_Bancomer_-_Diciembre_2017.jpg"
   },
 ];
 
