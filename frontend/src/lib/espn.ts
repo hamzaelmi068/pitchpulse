@@ -8,6 +8,7 @@ import type {
   NewsArticle,
   GroupStandingEntry,
   H2HGame,
+  StandingsGroupBlock,
 } from "@/types/espn";
 
 // Map ESPN venue city names → our internal venue IDs from venues.ts
@@ -109,6 +110,75 @@ export function parseScoreboard(data: ESPNScoreboardResponse): Match[] {
   return results;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function standingEntryFromEspnEntry(entry: any): GroupStandingEntry {
+  const stat = (name: string) =>
+    entry.stats?.find((s: { name: string }) => s.name === name)?.value ?? 0;
+
+  // entry.team can be an object (summary) or string (some endpoints)
+  const teamObj = typeof entry.team === "object" ? entry.team : null;
+  const logoHref: string =
+    teamObj?.logos?.[0]?.href ?? entry.logo?.[0]?.href ?? "";
+  const abbreviation: string =
+    teamObj?.abbreviation ??
+    entry.abbreviation ??
+    String(entry.team).slice(0, 3).toUpperCase();
+  const name: string = teamObj?.displayName ?? String(entry.team ?? "");
+
+  const goalsFor = stat("pointsFor");
+  const goalsAgainst = stat("pointsAgainst");
+  const pointDifferential = stat("pointDifferential");
+
+  return {
+    teamId: String(entry.id),
+    abbreviation,
+    name,
+    logo: logoHref,
+    played: stat("gamesPlayed"),
+    wins: stat("wins"),
+    draws: stat("ties"),
+    losses: stat("losses"),
+    goalsFor,
+    goalsAgainst,
+    points: stat("points"),
+    goalDifference:
+      goalsFor === 0 && goalsAgainst === 0 ? pointDifferential : undefined,
+  };
+}
+
+/** All standing groups returned on a match summary (group A, B, … or a single league table). */
+export function parseStandingsGroupsFromSummary(
+  data: ESPNSummaryResponse
+): StandingsGroupBlock[] {
+  const raw = data.standings?.groups ?? [];
+  const out: StandingsGroupBlock[] = [];
+
+  for (const group of raw) {
+    const header =
+      typeof group.header === "string"
+        ? group.header
+        : "Standings";
+    const entries = (group.standings?.entries ?? []).map(
+      standingEntryFromEspnEntry
+    );
+    if (entries.length > 0) {
+      out.push({ header, entries });
+    }
+  }
+
+  return out;
+}
+
+/** Uppercase label for match-feed standings, preferring competition.group over generic ESPN table title. */
+export function groupStandingsLabelFromSummary(
+  data: ESPNSummaryResponse
+): string | null {
+  const g = data.header?.competitions?.[0]?.groups;
+  if (!g) return null;
+  const raw = g.abbreviation ?? g.name ?? g.shortName;
+  return raw ? raw.trim().toUpperCase() : null;
+}
+
 export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
   const competition = data.header.competitions[0];
   const home = competition.competitors.find((c) => c.homeAway === "home")!;
@@ -169,31 +239,11 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
     };
   });
 
-  // Group standings
-  const groupStandings: GroupStandingEntry[] = [];
-  const group = data.standings?.groups?.[0];
-  if (group) {
-    for (const entry of group.standings.entries) {
-      const stat = (name: string) =>
-        entry.stats.find((s) => s.name === name)?.value ?? 0;
-      groupStandings.push({
-        teamId: entry.id,
-        abbreviation:
-          entry.logo?.[0]?.href
-            ? entry.logo[0].href.split("/").pop()?.split(".")[0]?.toUpperCase() ?? entry.team.slice(0, 3).toUpperCase()
-            : entry.team.slice(0, 3).toUpperCase(),
-        name: entry.team,
-        logo: entry.logo?.[0]?.href ?? "",
-        played: stat("gamesPlayed"),
-        wins: stat("wins"),
-        draws: stat("ties"),
-        losses: stat("losses"),
-        goalsFor: stat("pointsFor"),
-        goalsAgainst: stat("pointsAgainst"),
-        points: stat("points"),
-      });
-    }
-  }
+  // Group standings — first block only (same table shown on summary as full feed parser uses all groups elsewhere)
+  const groupStandings: GroupStandingEntry[] =
+    data.standings?.groups?.[0]?.standings?.entries?.map(
+      standingEntryFromEspnEntry
+    ) ?? [];
 
   // News
   const news: NewsArticle[] = (data.news?.articles ?? []).map((a) => ({

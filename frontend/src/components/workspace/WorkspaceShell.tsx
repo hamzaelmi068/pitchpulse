@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, GripHorizontal } from "lucide-react";
-import type { Match, NewsArticle } from "@/types/espn";
+import type { Match, NewsArticle, StandingsGroupBlock } from "@/types/espn";
 import { cn } from "@/lib/utils";
 import { NewsTab } from "./NewsTab";
 import { GamesTab } from "./GamesTab";
+import { FeedStandings } from "./FeedStandings";
 import { MatchDetailContent } from "./MatchDetailContent";
 
 interface WorkspaceShellProps {
@@ -25,10 +26,13 @@ interface WorkspaceShellProps {
   onMobileOpenChange: (open: boolean) => void;
   onSelectMatch: (id: string) => void;
   onClearSelectedMatch: () => void;
+  standingsGroups: StandingsGroupBlock[];
+  standingsLoading: boolean;
+  standingsError: string | null;
 }
 
-const DESKTOP_MIN_HEIGHT = 220;
-const DESKTOP_MAX_HEIGHT = 520;
+const DESKTOP_MIN_HEIGHT = 100;
+const DESKTOP_MAX_HEIGHT = 920;
 const MOBILE_BREAKPOINT = 768;
 
 export function WorkspaceShell({
@@ -48,6 +52,9 @@ export function WorkspaceShell({
   onMobileOpenChange,
   onSelectMatch,
   onClearSelectedMatch,
+  standingsGroups,
+  standingsLoading,
+  standingsError,
 }: WorkspaceShellProps) {
   const [dragging, setDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -136,15 +143,15 @@ export function WorkspaceShell({
           </button>
         )}
 
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
           <div className="flex items-center gap-3">
-            <GripHorizontal className="size-4 text-neutral-500" />
+            <GripHorizontal className="size-4 text-neutral-600" />
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                Match Feed
+                Match feed
               </p>
-              <p className="text-sm font-semibold text-neutral-100">
-                News, Fixtures, Details
+              <p className="text-sm font-medium text-neutral-200">
+                News · fixtures
               </p>
             </div>
           </div>
@@ -169,11 +176,18 @@ export function WorkspaceShell({
         </div>
 
         {!collapsed && (
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            <div className="grid gap-3 md:grid-cols-[1.2fr_1fr_1.1fr]">
-              <section className="rounded-xl border border-white/10 bg-black/20">
-                <div className="border-b border-white/10 px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            <div
+              className={cn(
+                "grid min-h-0 gap-4",
+                selectedMatchId
+                  ? "md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.05fr)]"
+                  : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+              )}
+            >
+              <section className="rounded-xl border border-white/[0.08] bg-black/25">
+                <div className="border-b border-white/[0.08] px-4 py-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
                     News
                   </p>
                 </div>
@@ -185,9 +199,9 @@ export function WorkspaceShell({
                 />
               </section>
 
-              <section className="rounded-xl border border-white/10 bg-black/20">
-                <div className="border-b border-white/10 px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+              <section className="min-w-0 rounded-xl border border-white/[0.08] bg-black/25">
+                <div className="border-b border-white/[0.08] px-4 py-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
                     Games
                   </p>
                 </div>
@@ -195,6 +209,7 @@ export function WorkspaceShell({
                   matches={matches}
                   loading={scoresLoading}
                   error={scoresError}
+                  showPickDetailHint={!selectedMatchId}
                   onSelectMatch={(id) => {
                     if (isMobile) {
                       onMobileOpenChange(true);
@@ -202,33 +217,45 @@ export function WorkspaceShell({
                     onSelectMatch(id);
                   }}
                 />
+                <div className="border-t border-white/[0.08]">
+                  <div className="border-b border-white/[0.08] px-4 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                      Standings
+                    </p>
+                  </div>
+                  <FeedStandings
+                    groups={standingsGroups}
+                    loading={standingsLoading}
+                    error={standingsError}
+                  />
+                </div>
               </section>
 
-              <section
-                ref={detailRef}
-                className="rounded-xl border border-white/10 bg-black/20"
-              >
-                <div className="border-b border-white/10 px-3 py-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                      Match Detail
-                    </p>
-                    {selectedMatchId && (
+              {selectedMatchId && (
+                <section
+                  ref={detailRef}
+                  className="rounded-xl border border-white/[0.08] bg-black/25"
+                >
+                  <div className="border-b border-white/[0.08] px-4 py-2.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        Match detail
+                      </p>
                       <button
                         type="button"
                         onClick={onClearSelectedMatch}
                         className="text-[10px] uppercase tracking-[0.18em] text-neutral-500 transition hover:text-neutral-200"
                       >
-                        Clear
+                        Close
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
-                <MatchDetailContent
-                  matchId={selectedMatchId}
-                  onClearSelection={onClearSelectedMatch}
-                />
-              </section>
+                  <MatchDetailContent
+                    matchId={selectedMatchId}
+                    onClearSelection={onClearSelectedMatch}
+                  />
+                </section>
+              )}
             </div>
           </div>
         )}

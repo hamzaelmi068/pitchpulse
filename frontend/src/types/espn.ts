@@ -21,6 +21,8 @@ export interface ESPNEvent {
   shortName: string;
   status: ESPNStatus;
   competitions: ESPNCompetition[];
+  season?: { slug?: string; year?: number; type?: number };
+
 }
 
 export interface ESPNStatus {
@@ -164,7 +166,8 @@ export interface ESPNSummaryCompetition {
   neutralSite: boolean;
   status: ESPNStatus;
   competitors: ESPNSummaryCompetitor[];
-  groups?: { name: string; shortName: string };
+  /** Present on WC summaries; numeric e.g. "Group 1" (maps to draw pots, not always A–L). */
+  groups?: { id?: string; name: string; shortName: string; abbreviation?: string };
 }
 
 export interface ESPNSummaryCompetitor {
@@ -224,6 +227,7 @@ export interface ESPNPickcenter {
 }
 
 export interface ESPNStandingGroup {
+  header?: string;
   standings: {
     entries: {
       id: string;
@@ -284,4 +288,14 @@ export interface GroupStandingEntry {
   goalsFor: number;
   goalsAgainst: number;
   points: number;
+  /** When GF/GA are not split (0), use ESPN goal diff / point differential */
+  goalDifference?: number;
+}
+
+/** One named block from ESPN summary `standings.groups` (e.g. group stage). */
+export interface StandingsGroupBlock {
+  header: string;
+  entries: GroupStandingEntry[];
+  /** Sort key from ESPN `groups.id` when available */
+  order?: number;
 }
