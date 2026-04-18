@@ -1,5 +1,3 @@
-//Testing
-
 import { PanelBottom } from "lucide-react";
 
 import Link from "next/link";
@@ -52,7 +50,7 @@ export function Header({ onOpenWorkspace }: HeaderProps) {
 
           {[
 
-            { label: "Home", href: "/home" },
+            { label: "Home", href: "/" },
             { label: "Venues", href: "/venues" },
             { label: "Fixtures", href: "/fixtures" },
             { label: "Groups", href: "/groups" },

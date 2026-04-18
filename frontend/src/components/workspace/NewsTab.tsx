@@ -25,7 +25,7 @@ export function NewsTab({
 }: NewsTabProps) {
   if (loading) {
     return (
-      <div className="space-y-4 p-3">
+      <div className="space-y-4 p-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <div key={index} className="space-y-2">
             <div className="h-24 rounded-xl bg-white/5" />
@@ -46,7 +46,7 @@ export function NewsTab({
   }
 
   return (
-    <div className="px-3 py-3">
+    <div className="px-4 py-3">
       {lastUpdated && (
         <p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-neutral-600">
           Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -56,24 +56,26 @@ export function NewsTab({
       {articles.length === 0 ? (
         <p className="text-xs text-neutral-500">No news articles are available right now.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {articles.map((article) => (
             <a
               key={article.id}
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group block overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] transition hover:bg-white/[0.05]"
+              className="group block overflow-hidden rounded-lg border border-white/[0.06] bg-white/[0.02] transition hover:bg-white/[0.04]"
             >
               {article.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={article.imageUrl}
-                  alt=""
-                  className="h-36 w-full object-cover"
-                />
+                <div className="flex w-full items-center justify-center bg-neutral-950/50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={article.imageUrl}
+                    alt=""
+                    className="h-auto w-full max-h-72 object-contain object-center"
+                  />
+                </div>
               )}
-              <div className="space-y-2 p-3">
+              <div className="space-y-1.5 p-3">
                 <p className="text-sm font-semibold leading-snug text-neutral-100 transition group-hover:text-white">
                   {article.headline}
                 </p>

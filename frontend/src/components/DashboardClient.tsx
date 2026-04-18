@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useScores } from "@/hooks/useScores";
 import { useNews } from "@/hooks/useNews";
+import { useFeedStandings } from "@/hooks/useFeedStandings";
 import { DashboardMap } from "@/components/map/DashboardMap";
 import { Header } from "@/components/header/Header";
 import { StatsPanel } from "@/components/stats/StatsPanel";
@@ -10,7 +11,7 @@ import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 
 const WORKSPACE_HEIGHT_KEY = "pitchpulse-workspace-height";
 const WORKSPACE_COLLAPSED_KEY = "pitchpulse-bottom-workspace-collapsed";
-const DEFAULT_WORKSPACE_HEIGHT = 320;
+const DEFAULT_WORKSPACE_HEIGHT = 420;
 
 export function DashboardClient() {
   const { matches, loading, error } = useScores();
@@ -20,6 +21,11 @@ export function DashboardClient() {
     error: newsError,
     lastUpdated: newsLastUpdated,
   } = useNews();
+  const {
+    groups: standingsGroups,
+    loading: standingsLoading,
+    error: standingsError,
+  } = useFeedStandings();
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [workspaceHeight, setWorkspaceHeight] = useState(DEFAULT_WORKSPACE_HEIGHT);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
@@ -108,6 +114,9 @@ export function DashboardClient() {
         onClearSelectedMatch={() => {
           setSelectedMatchId(null);
         }}
+        standingsGroups={standingsGroups}
+        standingsLoading={standingsLoading}
+        standingsError={standingsError}
       />
     </main>
   );
