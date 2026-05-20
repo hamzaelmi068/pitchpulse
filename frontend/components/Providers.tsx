@@ -25,29 +25,34 @@ function tint(primary: [number, number, number], base: [number, number, number],
 }
 
 /**
- * Build a hard-stop tricolor gradient from the 3 flag colours, each
- * composited over the cream base — gives visible flag strips in the background
- * while keeping text contrast intact.
+ * Relative luminance (WCAG formula) — used to cap alpha on very dark or very
+ * bright primaries so contrast stays readable regardless of team colour.
  */
-function buildFlagGradient(flag: string[]): { paper: string; paper2: string } | null {
-  const rgbs = flag.slice(0, 3).map(hexToRgb);
-  if (rgbs.some(c => !c)) return null;
-  const [c1, c2, c3] = rgbs as [number, number, number][];
+function luminance([r, g, b]: [number, number, number]): number {
+  const ch = [r, g, b].map(c => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+}
 
-  // Composited solid colours — no transparency so background stacking doesn't
-  // wash out the stripes when elements nest over each other
-  const s1 = tint(c1, BASE_PAPER, 0.13);
-  const s2 = tint(c2, BASE_PAPER, 0.13);
-  const s3 = tint(c3, BASE_PAPER, 0.13);
+/**
+ * Build solid-colour team theming from the primary flag colour.
+ * Alpha is clamped so very dark colours (black kit, navy) stay readable.
+ */
+function buildTeamStyles(flag: string[]): { paper: string; paper2: string } | null {
+  const primary = hexToRgb(flag[0] ?? '');
+  if (!primary) return null;
 
-  // Hard stops → clean distinct bands, not a blur
-  const paper = `linear-gradient(180deg, ${s1} 0% 33.33%, ${s2} 33.33% 66.66%, ${s3} 66.66% 100%)`;
+  // Dark primaries (e.g. black, navy) would grey-out the page at high alpha —
+  // cap them so text contrast stays safe
+  const lum = luminance(primary);
+  const alpha = lum < 0.08 ? 0.15 : 0.28;
 
-  // Cards (--paper-2) get a flat tint of the first flag colour so they read as
-  // distinct surfaces floating above the striped background
-  const paper2 = tint(c1, BASE_PAPER2, 0.16);
-
-  return { paper, paper2 };
+  return {
+    paper:  tint(primary, BASE_PAPER,  alpha),
+    paper2: tint(primary, BASE_PAPER2, alpha + 0.06),
+  };
 }
 
 // ───────── Tweaks ─────────
@@ -133,7 +138,7 @@ export function Providers({ children }: { children: ReactNode }) {
     const flag = myTeam && tweaks.look !== 'broadcast'
       ? teams[myTeam]?.flag
       : null;
-    const styles = flag ? buildFlagGradient(flag) : null;
+    const styles = flag ? buildTeamStyles(flag) : null;
 
     if (styles) {
       // Batch both writes — avoids two separate style recalculations (js-batch-dom-css)
