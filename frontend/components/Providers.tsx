@@ -16,12 +16,38 @@ function hexToRgb(hex: string): [number, number, number] | null {
 const BASE_PAPER:  [number, number, number] = [242, 238, 227]; // #F2EEE3
 const BASE_PAPER2: [number, number, number] = [234, 228, 212]; // #EAE4D4
 
-/** Alpha-composite `primary` over `base` at `alpha` opacity → rgb() string */
+/** Alpha-composite `primary` over `base` at `alpha` opacity → solid rgb() */
 function tint(primary: [number, number, number], base: [number, number, number], alpha: number): string {
   const r = Math.round(primary[0] * alpha + base[0] * (1 - alpha));
   const g = Math.round(primary[1] * alpha + base[1] * (1 - alpha));
   const b = Math.round(primary[2] * alpha + base[2] * (1 - alpha));
   return `rgb(${r},${g},${b})`;
+}
+
+/**
+ * Build a hard-stop tricolor gradient from the 3 flag colours, each
+ * composited over the cream base — gives visible flag strips in the background
+ * while keeping text contrast intact.
+ */
+function buildFlagGradient(flag: string[]): { paper: string; paper2: string } | null {
+  const rgbs = flag.slice(0, 3).map(hexToRgb);
+  if (rgbs.some(c => !c)) return null;
+  const [c1, c2, c3] = rgbs as [number, number, number][];
+
+  // Composited solid colours — no transparency so background stacking doesn't
+  // wash out the stripes when elements nest over each other
+  const s1 = tint(c1, BASE_PAPER, 0.13);
+  const s2 = tint(c2, BASE_PAPER, 0.13);
+  const s3 = tint(c3, BASE_PAPER, 0.13);
+
+  // Hard stops → clean distinct bands, not a blur
+  const paper = `linear-gradient(180deg, ${s1} 0% 33.33%, ${s2} 33.33% 66.66%, ${s3} 66.66% 100%)`;
+
+  // Cards (--paper-2) get a flat tint of the first flag colour so they read as
+  // distinct surfaces floating above the striped background
+  const paper2 = tint(c1, BASE_PAPER2, 0.16);
+
+  return { paper, paper2 };
 }
 
 // ───────── Tweaks ─────────
@@ -104,14 +130,15 @@ export function Providers({ children }: { children: ReactNode }) {
   // Broadcast is intentionally dark — don't override it with a light tint.
   useEffect(() => {
     const el = document.documentElement;
-    const rgb = myTeam && tweaks.look !== 'broadcast'
-      ? hexToRgb(teams[myTeam]?.flag?.[0] ?? '')
+    const flag = myTeam && tweaks.look !== 'broadcast'
+      ? teams[myTeam]?.flag
       : null;
+    const styles = flag ? buildFlagGradient(flag) : null;
 
-    if (rgb) {
-      // Batch both writes — avoids two separate style recalculations
-      el.style.setProperty('--paper',   tint(rgb, BASE_PAPER,  0.10));
-      el.style.setProperty('--paper-2', tint(rgb, BASE_PAPER2, 0.14));
+    if (styles) {
+      // Batch both writes — avoids two separate style recalculations (js-batch-dom-css)
+      el.style.setProperty('--paper',   styles.paper);
+      el.style.setProperty('--paper-2', styles.paper2);
       el.setAttribute('data-my-team', myTeam!);
     } else {
       el.style.removeProperty('--paper');
