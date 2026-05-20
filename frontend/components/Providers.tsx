@@ -2,57 +2,27 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { Tweaks } from '@/lib/types';
-import { teams } from '@/lib/data';
 
-// ── Colour helpers (module-level — never recreated) ───────────────────────────
-
-function hexToRgb(hex: string): [number, number, number] | null {
-  const m = hex.replace('#', '').match(/.{2}/g);
-  if (!m || m.length < 3) return null;
-  return [parseInt(m[0], 16), parseInt(m[1], 16), parseInt(m[2], 16)];
-}
-
-// Default base colours matching globals.css
-const BASE_PAPER:  [number, number, number] = [242, 238, 227]; // #F2EEE3
-const BASE_PAPER2: [number, number, number] = [234, 228, 212]; // #EAE4D4
-
-/** Alpha-composite `primary` over `base` at `alpha` opacity → solid rgb() */
-function tint(primary: [number, number, number], base: [number, number, number], alpha: number): string {
-  const r = Math.round(primary[0] * alpha + base[0] * (1 - alpha));
-  const g = Math.round(primary[1] * alpha + base[1] * (1 - alpha));
-  const b = Math.round(primary[2] * alpha + base[2] * (1 - alpha));
-  return `rgb(${r},${g},${b})`;
-}
+// ── Flag-image background (module-level — never recreated) ───────────────────
 
 /**
- * Relative luminance (WCAG formula) — used to cap alpha on very dark or very
- * bright primaries so contrast stays readable regardless of team colour.
+ * Maps FIFA 3-letter codes → flagcdn.com ISO 2-letter (or regional) codes.
+ * flagcdn.com uses ISO 3166-1 alpha-2 for countries; England needs the
+ * gb-eng subdivision code.
  */
-function luminance([r, g, b]: [number, number, number]): number {
-  const ch = [r, g, b].map(c => {
-    const s = c / 255;
-    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
-}
+const FIFA_TO_ISO: Record<string, string> = {
+  ARG: 'ar', AUS: 'au', BEL: 'be', BRA: 'br',
+  CAN: 'ca', COL: 'co', CRO: 'hr', DEN: 'dk',
+  ENG: 'gb-eng', ESP: 'es', FRA: 'fr', GER: 'de',
+  ITA: 'it', JPN: 'jp', KOR: 'kr', MAR: 'ma',
+  MEX: 'mx', NED: 'nl', POL: 'pl', POR: 'pt',
+  SEN: 'sn', SUI: 'ch', URU: 'uy', USA: 'us',
+};
 
-/**
- * Build solid-colour team theming from the primary flag colour.
- * Alpha is clamped so very dark colours (black kit, navy) stay readable.
- */
-function buildTeamStyles(flag: string[]): { paper: string; paper2: string } | null {
-  const primary = hexToRgb(flag[0] ?? '');
-  if (!primary) return null;
-
-  // Dark primaries (e.g. black, navy) would grey-out the page at high alpha —
-  // cap them so text contrast stays safe
-  const lum = luminance(primary);
-  const alpha = lum < 0.08 ? 0.15 : 0.28;
-
-  return {
-    paper:  tint(primary, BASE_PAPER,  alpha),
-    paper2: tint(primary, BASE_PAPER2, alpha + 0.06),
-  };
+/** Returns a 1280-wide flag image URL for a FIFA team code, or null if unknown. */
+function getFlagUrl(fifaCode: string): string | null {
+  const iso = FIFA_TO_ISO[fifaCode];
+  return iso ? `https://flagcdn.com/w1280/${iso}.webp` : null;
 }
 
 // ───────── Tweaks ─────────
@@ -129,26 +99,40 @@ export function Providers({ children }: { children: ReactNode }) {
     }
   }, [myTeam]);
 
-  // Apply team brand tint to background CSS variables (js-batch-dom-css).
+  // Apply team flag image as full-page background (js-batch-dom-css).
   // Depends on both myTeam and tweaks.look — split from the localStorage effect
   // so each effect has a single clear purpose (rerender-split-combined-hooks).
-  // Broadcast is intentionally dark — don't override it with a light tint.
+  // Broadcast is intentionally dark — skip the flag overlay there.
   useEffect(() => {
-    const el = document.documentElement;
-    const flag = myTeam && tweaks.look !== 'broadcast'
-      ? teams[myTeam]?.flag
+    const html = document.documentElement;
+    const body = document.body;
+    const flagUrl = myTeam && tweaks.look !== 'broadcast'
+      ? getFlagUrl(myTeam)
       : null;
-    const styles = flag ? buildTeamStyles(flag) : null;
 
-    if (styles) {
-      // Batch both writes — avoids two separate style recalculations (js-batch-dom-css)
-      el.style.setProperty('--paper',   styles.paper);
-      el.style.setProperty('--paper-2', styles.paper2);
-      el.setAttribute('data-my-team', myTeam!);
+    if (flagUrl) {
+      // Full-page flag: fixed so it doesn't scroll with content
+      body.style.backgroundImage    = `url(${flagUrl})`;
+      body.style.backgroundSize     = 'cover';
+      body.style.backgroundPosition = 'center';
+      body.style.backgroundAttachment = 'fixed';
+      body.style.backgroundRepeat   = 'no-repeat';
+
+      // Make surface cards semi-transparent so the flag bleeds through.
+      // rgba keeps the warm cream tint while letting the flag show beneath.
+      html.style.setProperty('--paper',   'rgba(242,238,227,0.82)');
+      html.style.setProperty('--paper-2', 'rgba(234,228,212,0.88)');
+      html.setAttribute('data-my-team', myTeam!);
     } else {
-      el.style.removeProperty('--paper');
-      el.style.removeProperty('--paper-2');
-      el.removeAttribute('data-my-team');
+      // Clear everything — restore solid opaque defaults from globals.css
+      body.style.backgroundImage     = '';
+      body.style.backgroundSize      = '';
+      body.style.backgroundPosition  = '';
+      body.style.backgroundAttachment = '';
+      body.style.backgroundRepeat    = '';
+      html.style.removeProperty('--paper');
+      html.style.removeProperty('--paper-2');
+      html.removeAttribute('data-my-team');
     }
   }, [myTeam, tweaks.look]);
 
